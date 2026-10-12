@@ -14,6 +14,7 @@ type cli struct {
 	Dest     string `arg:"" name:"dest" help:"Destination directory"`
 	MaxDepth int    `short:"L" name:"max-depth" default:"-1" help:"Maximum depth to mirror (-1 for unlimited)"`
 	Filter   string `short:"f" name:"filter" default:"*" help:"Filter pattern to match files"`
+	NoColor  bool   `name:"no-color" help:"Disable colored output"`
 }
 
 func main() {
@@ -35,9 +36,24 @@ func main() {
 		Target:   args.Dest,
 		MaxDepth: args.MaxDepth,
 		Filter:   args.Filter,
+		Color:    useColor(args.NoColor),
 	})
 	if err != nil {
 		slog.Error("Failed to run", "error", err)
 		os.Exit(1)
 	}
+}
+
+// useColor enables colors only when stdout is a terminal, and never when
+// --no-color or NO_COLOR (https://no-color.org) is set.
+func useColor(noColor bool) bool {
+	if noColor || os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+
+	info, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	return info.Mode()&os.ModeCharDevice != 0
 }
