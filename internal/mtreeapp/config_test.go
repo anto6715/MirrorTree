@@ -37,6 +37,20 @@ func TestNormalizeConfigResolvesSourceSymlink(t *testing.T) {
 	}
 }
 
+func TestNormalizeConfigCleansTarget(t *testing.T) {
+	root := t.TempDir()
+	source := makeTestDir(t, filepath.Join(root, "source"))
+	target := filepath.Join(root, "mirror")
+
+	got, err := normalizeConfig(Config{Source: source, Target: target + "/", MaxDepth: -1, Filter: "*"})
+	if err != nil {
+		t.Fatalf("normalizeConfig returned an error: %v", err)
+	}
+	if got.Target != target {
+		t.Errorf("Target = %q, want %q", got.Target, target)
+	}
+}
+
 func TestNormalizeConfigRejectsInvalidValues(t *testing.T) {
 	root := t.TempDir()
 	source := makeTestDir(t, filepath.Join(root, "source"))

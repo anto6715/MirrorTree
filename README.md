@@ -17,8 +17,8 @@ the target dir structure without actually creating files.
 
 ## Status
 
-Prototype: `mtree` builds the mirror plan and prints it (dry run).
-Nothing is written to disk yet.
+Prototype. By default `mtree` only prints the mirror plan (dry run);
+with `--apply` it also creates the mirror.
 
 ## Install
 
@@ -46,9 +46,10 @@ Flags:
   -L, --max-depth=-1    Maximum depth to mirror (-1 for unlimited)
   -f, --filter="*"      Filter pattern to match files
       --no-color        Disable colored output
+      --apply           Create the mirror (without it, only print the plan)
 ```
 
-Example:
+Example, first as a dry run:
 
 ```
 $ mtree -f '*.nc' /data mirror
@@ -66,6 +67,16 @@ mirror
 
 3 directories, 3 files
 Dry run: nothing was created
+Run again with --apply to create the mirror
+```
+
+then for real (same plan output, different last line):
+
+```
+$ mtree -f '*.nc' --apply /data mirror
+...
+3 directories, 3 files
+Mirror created: mirror
 ```
 
 ### Behaviour
@@ -75,7 +86,13 @@ Dry run: nothing was created
   not their directories. Quote it so the shell does not expand it.
 - `--max-depth 0` mirrors only the files directly inside `<path>`.
 - Only directories containing at least one matching file are mirrored: empty directories are skipped.
-- Symlinks are not followed, and unreadable directories are skipped.
+- Symlinks are not followed: they are mirrored as empty regular files.
+  Unreadable directories are skipped.
+- Mock files are empty (0 bytes) with mode `0644`, and directories have mode `0755`
+  (both reduced by your umask). Missing parent directories of `<dest>` are created.
+- Nothing that already exists is ever overwritten.
+- If creating something fails, `mtree` stops at that point and reports what it created.
+  The partial `<dest>` is left on disk: delete it before running again.
 - Colors are used only when the output is a terminal. Disable them with `--no-color`
   or by setting `NO_COLOR`.
 

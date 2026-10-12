@@ -28,7 +28,8 @@ func TestWriteMirrorPlan(t *testing.T) {
 		"        └── c.nc\n" +
 		"\n" +
 		"3 directories, 4 files\n" +
-		"Dry run: nothing was created\n"
+		"Dry run: nothing was created\n" +
+		"Run again with --apply to create the mirror\n"
 
 	if output.String() != want {
 		t.Errorf("output:\n%s\nwant:\n%s", output.String(), want)
@@ -51,10 +52,57 @@ func TestWriteMirrorPlanEmpty(t *testing.T) {
 		"No files match filter \"*.nc\"\n" +
 		"\n" +
 		"0 directories, 0 files\n" +
-		"Dry run: nothing was created\n"
+		"Dry run: nothing was created\n" +
+		"Run again with --apply to create the mirror\n"
 
 	if output.String() != want {
 		t.Errorf("output:\n%s\nwant:\n%s", output.String(), want)
+	}
+}
+
+func TestWriteMirrorPlanApply(t *testing.T) {
+	tests := []struct {
+		name    string
+		plan    mirrorPlan
+		wantEnd string
+	}{
+		{name: "files to create", plan: testPlan(t, "a.nc"), wantEnd: "\n0 directories, 1 file\n"},
+		{name: "nothing matched", plan: testPlan(t), wantEnd: "\n0 directories, 0 files\nNothing to create\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var output strings.Builder
+			if err := writeMirrorPlan(&output, tt.plan, formatOptions{apply: true}); err != nil {
+				t.Fatalf("writeMirrorPlan returned an error: %v", err)
+			}
+			if !strings.HasSuffix(output.String(), tt.wantEnd) {
+				t.Errorf("output does not end with %q:\n%s", tt.wantEnd, output.String())
+			}
+			if strings.Contains(output.String(), "Dry run") {
+				t.Errorf("apply output mentions a dry run:\n%s", output.String())
+			}
+		})
+	}
+}
+
+func TestWriteMirrorCreated(t *testing.T) {
+	plan := testPlan(t, "a.nc")
+
+	var plain strings.Builder
+	if err := writeMirrorCreated(&plain, plan, formatOptions{}); err != nil {
+		t.Fatalf("writeMirrorCreated returned an error: %v", err)
+	}
+	if want := "Mirror created: mirror\n"; plain.String() != want {
+		t.Errorf("output = %q, want %q", plain.String(), want)
+	}
+
+	var colored strings.Builder
+	if err := writeMirrorCreated(&colored, plan, formatOptions{color: true}); err != nil {
+		t.Fatalf("writeMirrorCreated returned an error: %v", err)
+	}
+	if want := ansiGreen + "Mirror created: mirror" + ansiReset + "\n"; colored.String() != want {
+		t.Errorf("output = %q, want %q", colored.String(), want)
 	}
 }
 

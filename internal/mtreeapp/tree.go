@@ -1,7 +1,9 @@
 package mtreeapp
 
 import (
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -49,4 +51,13 @@ func buildTree(plan mirrorPlan) mirrorTree {
 
 func newDirNode(name string) *treeNode {
 	return &treeNode{name: name, isDir: true, children: map[string]*treeNode{}}
+}
+
+// sortedChildren returns the children of n sorted by name.
+func (n *treeNode) sortedChildren() []*treeNode {
+	children := make([]*treeNode, 0, len(n.children))
+	for _, name := range slices.Sorted(maps.Keys(n.children)) {
+		children = append(children, n.children[name])
+	}
+	return children
 }

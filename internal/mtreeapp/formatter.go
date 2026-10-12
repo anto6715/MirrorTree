@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"maps"
-	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -14,6 +12,7 @@ import (
 
 type formatOptions struct {
 	color bool
+	apply bool
 }
 
 func writeMirrorPlan(w io.Writer, plan mirrorPlan, opts formatOptions) error {
@@ -38,20 +37,31 @@ func writeMirrorPlan(w io.Writer, plan mirrorPlan, opts formatOptions) error {
 		plural(tree.dirs, "directory", "directories"),
 		plural(tree.files, "file", "files"),
 	)
-	fmt.Fprintln(output, st.warn("Dry run: nothing was created"))
+	switch {
+	case !opts.apply:
+		fmt.Fprintln(output, st.warn("Dry run: nothing was created"))
+		fmt.Fprintln(output, "Run again with --apply to create the mirror")
+	case tree.files == 0:
+		fmt.Fprintln(output, "Nothing to create")
+	}
 
 	return output.Flush()
+}
+
+// writeMirrorCreated reports that executePlan completed.
+func writeMirrorCreated(w io.Writer, plan mirrorPlan, opts formatOptions) error {
+	st := style{enabled: opts.color}
+	_, err := fmt.Fprintln(w, st.ok("Mirror created: "+displayName(plan.target)))
+	return err
 }
 
 // writeTree prints the children of node sorted by name, drawing the branches
 // with prefix carrying the indentation of the ancestors.
 func writeTree(output io.Writer, node *treeNode, prefix string, st style) {
-	names := slices.Sorted(maps.Keys(node.children))
-	for i, name := range names {
-		child := node.children[name]
-
+	children := node.sortedChildren()
+	for i, child := range children {
 		connector, indent := "├── ", "│   "
-		if i == len(names)-1 {
+		if i == len(children)-1 {
 			connector, indent = "└── ", "    "
 		}
 
@@ -89,6 +99,7 @@ const (
 	ansiDim      = "\x1b[2m"
 	ansiBoldBlue = "\x1b[1;34m"
 	ansiYellow   = "\x1b[33m"
+	ansiGreen    = "\x1b[32m"
 )
 
 // style wraps text in ANSI codes when enabled, and returns it unchanged
@@ -101,6 +112,7 @@ func (s style) title(text string) string { return s.wrap(ansiBold, text) }
 func (s style) label(text string) string { return s.wrap(ansiDim, text) }
 func (s style) dir(text string) string   { return s.wrap(ansiBoldBlue, text) }
 func (s style) warn(text string) string  { return s.wrap(ansiYellow, text) }
+func (s style) ok(text string) string    { return s.wrap(ansiGreen, text) }
 
 func (s style) wrap(code, text string) string {
 	if !s.enabled {

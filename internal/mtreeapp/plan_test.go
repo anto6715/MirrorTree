@@ -91,6 +91,12 @@ func TestBuildMirrorPlanEmpty(t *testing.T) {
 // paths, grouping them by directory as find.FindFilesWithDirs does.
 func testPlan(t *testing.T, rels ...string) mirrorPlan {
 	t.Helper()
+	return testPlanAt(t, "mirror", rels...)
+}
+
+// testPlanAt is testPlan with a custom target.
+func testPlanAt(t *testing.T, target string, rels ...string) mirrorPlan {
+	t.Helper()
 
 	sourceFiles := map[string][]string{}
 	for _, rel := range rels {
@@ -99,7 +105,7 @@ func testPlan(t *testing.T, rels ...string) mirrorPlan {
 		sourceFiles[dir] = append(sourceFiles[dir], file)
 	}
 
-	plan, err := buildMirrorPlan(Config{Source: "/data", Target: "mirror", Filter: "*"}, sourceFiles)
+	plan, err := buildMirrorPlan(Config{Source: "/data", Target: target, Filter: "*"}, sourceFiles)
 	if err != nil {
 		t.Fatalf("buildMirrorPlan returned an error: %v", err)
 	}

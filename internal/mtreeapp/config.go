@@ -14,6 +14,7 @@ type Config struct {
 	MaxDepth int
 	Filter   string
 	Color    bool
+	Apply    bool
 }
 
 func normalizeConfig(cfg Config) (Config, error) {
@@ -39,8 +40,12 @@ func normalizeConfig(cfg Config) (Config, error) {
 		return Config{}, fmt.Errorf("target cannot be empty")
 	}
 
+	// Clean so a trailing slash cannot make filepath.Dir return the target
+	// itself when its parents are created
+	target := filepath.Clean(cfg.Target)
+
 	// Raise error if target already exists or in case of other errors
-	_, err = os.Lstat(cfg.Target)
+	_, err = os.Lstat(target)
 	switch {
 	case err == nil:
 		return Config{}, fmt.Errorf("target %q already exists", cfg.Target)
@@ -50,6 +55,7 @@ func normalizeConfig(cfg Config) (Config, error) {
 
 	normalized := cfg
 	normalized.Source = source
+	normalized.Target = target
 
 	return normalized, nil
 }

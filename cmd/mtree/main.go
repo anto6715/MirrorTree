@@ -15,6 +15,7 @@ type cli struct {
 	MaxDepth int    `short:"L" name:"max-depth" default:"-1" help:"Maximum depth to mirror (-1 for unlimited)"`
 	Filter   string `short:"f" name:"filter" default:"*" help:"Filter pattern to match files"`
 	NoColor  bool   `name:"no-color" help:"Disable colored output"`
+	Apply    bool   `name:"apply" help:"Create the mirror (without it, only print the plan)"`
 }
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 		MaxDepth: args.MaxDepth,
 		Filter:   args.Filter,
 		Color:    useColor(args.NoColor),
+		Apply:    args.Apply,
 	})
 	if err != nil {
 		slog.Error("Failed to run", "error", err)

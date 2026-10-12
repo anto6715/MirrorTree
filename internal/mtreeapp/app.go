@@ -31,8 +31,28 @@ func Run(cfg Config) error {
 		return err
 	}
 
-	if err := writeMirrorPlan(os.Stdout, plan, formatOptions{color: cfg.Color}); err != nil {
+	formatOpts := formatOptions{color: cfg.Color, apply: cfg.Apply}
+	if err := writeMirrorPlan(os.Stdout, plan, formatOpts); err != nil {
 		return fmt.Errorf("failed to print mirror plan: %w", err)
+	}
+
+	// Dry run, or nothing matched: create nothing
+	if !cfg.Apply || len(plan.dirs) == 0 {
+		return nil
+	}
+
+	dirs, files, err := executePlan(plan)
+	if err != nil {
+		return fmt.Errorf("mirror %q incomplete, created %s and %s before failing: %w",
+			plan.target,
+			plural(dirs, "directory", "directories"),
+			plural(files, "file", "files"),
+			err,
+		)
+	}
+
+	if err := writeMirrorCreated(os.Stdout, plan, formatOpts); err != nil {
+		return fmt.Errorf("failed to print result: %w", err)
 	}
 
 	return nil
