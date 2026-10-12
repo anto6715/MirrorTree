@@ -1,0 +1,5 @@
+github.com/alecthomas/kong v1.15.0/go.mod h1:wrlbXem1CWqUV5Vbmss5ISYhsVPkBb1Yo7YKJghju2I=
+github.com/alecthomas/kong v1.16.1 h1:ixhCt93XkJ98kGposQ54+bl0IK6XwqB40AsMynU7Z8E=
+github.com/alecthomas/kong v1.16.1/go.mod h1:wrlbXem1CWqUV5Vbmss5ISYhsVPkBb1Yo7YKJghju2I=
+github.com/anto6715/goat v0.0.0-20261012092944-7bbfa23bd911 h1:DrK7LaG29vqO7TEpoqhOd6h2ZR7dJqb5fEpaPhiunZ8=
+github.com/anto6715/goat v0.0.0-20261012092944-7bbfa23bd911/go.mod h1:bbws6imtSN8T4a4XuweSVcCR239yX5KrPlO0uF+ystw=
